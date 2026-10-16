@@ -49,7 +49,7 @@ Log out and back in once at the end: GNOME Shell loads extension code only at lo
 | `osk` | On-screen keyboard: glass background, PC key labels, opens automatically only when no hardware keyboard is attached |
 | `screen-rotate` | Auto-rotation that keeps working after screen blanking and suspend |
 | `panel-portrait` | Top bar fits in portrait: tighter spacing first, then hides tray icons and the date only if still needed |
-| `plymouth` | Boot splash: white Tux with a bitten apple cut out, thin macOS-style progress bar |
+| `plymouth` | Boot splash: white Tux with a pear cut out of its belly, thin macOS-style progress bar |
 | `gdm-theme` | Optional: login and lock screen in the WhiteSur look |
 | `flatpak-theming` | Flatpak apps follow the theme; Spotify gets a proper window frame |
 | `touch-right-click` | Hold a finger for one second, lift it: right click, in every app |

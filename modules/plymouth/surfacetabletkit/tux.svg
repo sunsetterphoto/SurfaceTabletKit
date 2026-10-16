@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="400" height="480">
-  <!-- SurfaceTabletKit boot logo: white Tux silhouette with a bitten apple cut out of the belly -->
+  <!-- SurfaceTabletKit boot logo: white Tux silhouette with a pear cut out of the belly -->
   <defs>
     <mask id="cutouts">
       <rect x="0" y="0" width="400" height="480" fill="#fff"/>
@@ -17,19 +17,17 @@
       <path fill="none" stroke="#000" stroke-width="7" stroke-linecap="round" d="M304 236 C 328 290, 334 340, 326 372"/>
       <path fill="none" stroke="#000" stroke-width="7" stroke-linecap="round" d="M110 416 C 140 404, 170 406, 190 420"/>
       <path fill="none" stroke="#000" stroke-width="7" stroke-linecap="round" d="M290 416 C 260 404, 230 406, 210 420"/>
-      <!-- the apple, cut out of the belly -->
-      <g transform="translate(0,48)">
-        <path fill="#000" d="M200 222
-             C 184 210, 146 208, 140 252
-             C 134 294, 164 330, 184 328
-             C 192 327, 196 322, 200 322
-             C 204 322, 208 327, 216 328
-             C 236 330, 266 294, 260 252
-             C 254 208, 216 210, 200 222 Z"/>
-        <!-- bite: give the body back -->
-        <circle cx="266" cy="246" r="24" fill="#fff"/>
-        <path fill="#000" d="M201 206 C 200 186, 214 172, 236 170 C 236 192, 222 204, 201 206 Z"/>
-      </g>
+      <!-- the pear, cut out of the belly -->
+      <path fill="#000" d="M200 270
+           C 220 270, 229 288, 231 303
+           C 233 318, 262 327, 262 356
+           C 262 385, 236 401, 200 401
+           C 164 401, 138 385, 138 356
+           C 138 327, 167 318, 169 303
+           C 171 288, 180 270, 200 270 Z"/>
+      <!-- stem and leaf -->
+      <path fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" d="M200 274 C 200 262, 203 252, 209 244"/>
+      <path fill="#000" d="M207 250 C 214 236, 232 233, 242 239 C 234 251, 218 256, 207 250 Z"/>
     </mask>
   </defs>
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Boot splash: white Tux with a bitten apple cut out of its belly and a thin macOS-style
+# Boot splash: white Tux with a pear cut out of its belly and a thin macOS-style
 # progress bar (boot only). Installs the Plymouth theme and rebuilds the initramfs of the
 # running kernel; later kernels pick the theme up automatically through dracut. Idempotent.
 #

@@ -43,7 +43,7 @@ declare -A WHAT=(
     [osk]="on-screen keyboard: glass, PC labels, auto-open only without a hardware keyboard"
     [screen-rotate]="reliable auto-rotation (own D-Bus connection for the accelerometer)"
     [panel-portrait]="top bar fits in portrait: tighter spacing first, hide icons/date only if needed"
-    [plymouth]="boot splash: Tux with a bitten apple, macOS-style progress bar"
+    [plymouth]="boot splash: Tux with a pear in its belly, macOS-style progress bar"
     [gdm-theme]="optional: login/lock screen in the WhiteSur look"
     [flatpak-theming]="Flatpak apps follow the theme; Spotify gets a proper window frame"
     [touch-right-click]="long-press = right click everywhere (needs the measured touchscreen)"

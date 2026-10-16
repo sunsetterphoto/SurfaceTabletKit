@@ -1,12 +1,11 @@
 # plymouth - boot splash
 
-A Plymouth theme (`surfacetabletkit`): a white Tux silhouette on black with a bitten apple cut out
-of its belly, and a thin macOS-style progress bar underneath that appears only while booting, not
+A Plymouth theme (`surfacetabletkit`): a white Tux silhouette on black with a pear cut out of
+its belly, and a thin macOS-style progress bar underneath that appears only while booting, not
 on shutdown. The logo takes 30 % of the screen height; all artwork is scaled by one factor so the
 bar's round ends stay round on any screen.
 
-The drawing `surfacetabletkit/tux.svg` is an original work - neither Larry Ewing's Tux nor an
-Apple asset.
+The drawing `surfacetabletkit/tux.svg` is an original work, not Larry Ewing's Tux.
 
 ## Files
 
