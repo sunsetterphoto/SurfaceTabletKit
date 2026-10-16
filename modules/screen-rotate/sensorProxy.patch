@@ -1,0 +1,43 @@
+--- a/sensorProxy.js	2026-10-16 17:12:03.176272692 +0200
++++ b/sensorProxy.js	2026-10-16 17:12:03.212907344 +0200
+@@ -22,8 +22,18 @@
+     this._rotate_cb = rotate_cb;
+     this._proxy = null;
+     this._enabled = false;
+-    this._watcher_id = Gio.bus_watch_name(
+-      Gio.BusType.SYSTEM,
++    // surfaceos: own system-bus connection instead of the one shared with mutter.
++    // iio-sensor-proxy keeps claims per sender (bus connection) and sends orientation
++    // changes only to senders that claimed. mutter (same process) releases the sensor on
++    // screen power-save / tablet-mode changes, which silently dropped this extension's
++    // claim as well - after that the screen never rotated again.
++    this._connection = Gio.DBusConnection.new_for_address_sync(
++      Gio.dbus_address_get_for_bus_sync(Gio.BusType.SYSTEM, null),
++      Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT |
++        Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,
++      null, null);
++    this._watcher_id = Gio.bus_watch_name_on_connection(
++      this._connection,
+       'net.hadess.SensorProxy',
+       Gio.BusNameWatcherFlags.NONE,
+       this.appeared.bind(this),
+@@ -35,6 +45,8 @@
+     Gio.bus_unwatch_name(this._watcher_id);
+     if (this._enabled) this.disable();
+     this._proxy = null;
++    this._connection.close(null, null);
++    this._connection = null;
+   }
+ 
+   enable() {
+@@ -50,8 +62,8 @@
+   }
+ 
+   appeared(_connection, _name, _name_owner) {
+-    this._proxy = Gio.DBusProxy.new_for_bus_sync(
+-      Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, null,
++    this._proxy = Gio.DBusProxy.new_sync(
++      this._connection, Gio.DBusProxyFlags.NONE, null,
+       'net.hadess.SensorProxy', '/net/hadess/SensorProxy', 'net.hadess.SensorProxy',
+       null);
+     this._proxy.connect('g-properties-changed', this.properties_changed.bind(this));

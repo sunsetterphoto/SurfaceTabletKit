@@ -1,0 +1,7 @@
+[Unit]
+Description=Check whether linux-surface supports the next Fedora release
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/libexec/surfacetabletkit/linux-surface-watch

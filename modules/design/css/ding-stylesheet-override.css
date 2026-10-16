@@ -1,0 +1,40 @@
+/* gtk4-ding: desktop context menus in the dock's glass material (2026-10-15)
+ * Loaded by ding from ~/.config/com.desktop.ding/stylesheet-override.css (priority USER).
+ * GTK4 popovers are separate xdg_popup windows that blur-my-shell does not blur, so the
+ * glass is approximated: same dark tint as the dock pipeline (0.11/0.11/0.13), denser
+ * alpha because nothing blurs behind it, light inner rim like the dock's edge glare. */
+
+popover.menu > contents,
+popover.menu.background > contents {
+  background-color: rgba(28, 28, 33, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.12),
+              0 10px 28px rgba(0, 0, 0, 0.35);
+  padding: 6px;
+}
+
+popover.menu > arrow {
+  background-color: rgba(28, 28, 33, 0.88);
+}
+
+popover.menu modelbutton {
+  border-radius: 11px;
+  padding: 5px 10px;
+  color: #ffffff;
+}
+
+popover.menu modelbutton:hover,
+popover.menu modelbutton:selected {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+popover.menu modelbutton:selected:active {
+  background-color: rgba(255, 255, 255, 0.24);
+}
+
+popover.menu separator,
+popover.menu.background separator {
+  background-color: rgba(255, 255, 255, 0.10);
+  margin: 5px 10px;
+}

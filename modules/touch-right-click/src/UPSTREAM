@@ -1,0 +1,6 @@
+Upstream: https://github.com/PeterCxy/evdev-right-click-emulation
+Commit:   350939b8d2e95ed1be352f1ac734bdedf14e43c7 (2019-03-13, "input: remember to clean up timerfd")
+License:  WTFPL v2, see LICENSE
+
+The sources in this directory are already patched. The difference to upstream is
+../wayland-position-and-release.patch.

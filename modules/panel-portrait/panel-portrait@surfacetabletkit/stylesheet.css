@@ -1,0 +1,5 @@
+/* Portrait only (class set by extension.js). MacTahoe default: 12px / 12px. */
+#panel.surfacetabletkit-portrait .panel-button {
+  -natural-hpadding: 6px !important;
+  -minimum-hpadding: 4px !important;
+}

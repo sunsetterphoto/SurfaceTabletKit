@@ -1,0 +1,315 @@
+diff --git a/input.c b/input.c
+index c0b1971..b426ce0 100644
+--- a/input.c
++++ b/input.c
+@@ -8,20 +8,65 @@
+ #include <sys/timerfd.h>
+ #include <unistd.h>
+ 
++// Coordinate space of one source touch device, needed to translate a
++// touch position into the coordinate space of our virtual pointer.
++struct axis_range_t {
++    int x_min, x_max;
++    int y_min, y_max;
++};
++
+ struct input_state_t {
+     int pressed_device_id;
+     int pos_x, pos_y;
+     int pressed_pos_x, pressed_pos_y;
+     int fd_timer; // The timer used to execute right click on timeout
+     struct libevdev_uinput *uinput;
++    struct axis_range_t *ranges; // one entry per source device
++    // A recognized long press waiting for the finger to be lifted.
++    int pending;
++    int pending_x, pending_y;   // position in source device coordinates
++    int pending_device_id;
+ };
+ 
++static void send_click_at(struct input_state_t *state,
++        int dev_id, int pos_x, int pos_y);
++
+ void free_evdev(struct libevdev *evdev) {
+     int fd = libevdev_get_fd(evdev);
+     libevdev_free(evdev);
+     close(fd);
+ }
+ 
++// Read the coordinate space of a touch device. Multitouch axes win when
++// present -- that is what a finger reports on; ABS_X/ABS_Y is the fallback
++// for single-touch digitizer nodes.
++static void read_axis_range(struct libevdev *evdev, struct axis_range_t *r) {
++    const struct input_absinfo *ax =
++        libevdev_get_abs_info(evdev, ABS_MT_POSITION_X);
++    const struct input_absinfo *ay =
++        libevdev_get_abs_info(evdev, ABS_MT_POSITION_Y);
++    if (ax == NULL)
++        ax = libevdev_get_abs_info(evdev, ABS_X);
++    if (ay == NULL)
++        ay = libevdev_get_abs_info(evdev, ABS_Y);
++    r->x_min = ax != NULL ? ax->minimum : 0;
++    r->x_max = ax != NULL ? ax->maximum : 0;
++    r->y_min = ay != NULL ? ay->minimum : 0;
++    r->y_max = ay != NULL ? ay->maximum : 0;
++}
++
++// Map a value from a source axis onto 0..UINPUT_ABS_MAX
++static int scale_axis(int value, int min, int max) {
++    if (max <= min)
++        return 0;
++    if (value < min)
++        value = min;
++    if (value > max)
++        value = max;
++    long long span = (long long) max - (long long) min;
++    return (int) (((long long) (value - min) * UINPUT_ABS_MAX) / span);
++}
++
+ // Build the fd set used by `select`
+ // return: nfds to be used in select()
+ int build_fd_set(fd_set *fds, int fd_timer,
+@@ -39,6 +84,7 @@ int build_fd_set(fd_set *fds, int fd_timer,
+ }
+ 
+ void arm_delayed_rclick(struct input_state_t *state, int dev_id) {
++    state->pending = 0;
+     // Record the position where the touch event began
+     state->pressed_pos_x = state->pos_x;
+     state->pressed_pos_y = state->pos_y;
+@@ -84,26 +130,88 @@ void on_input_event(struct input_state_t *state,
+             // it can be canceled
+             arm_delayed_rclick(state, dev_id);
+         } else {
+-            // Finger released. It is no longer considered a long-press
++            // Finger released. Now -- with no touch sequence in flight --
++            // is the moment to deliver a recognized long press.
++            if (state->pending && state->pending_device_id == dev_id) {
++                unsigned int dx = abs(state->pos_x - state->pending_x);
++                unsigned int dy = abs(state->pos_y - state->pending_y);
++                if (dx <= LONG_CLICK_FUZZ && dy <= LONG_CLICK_FUZZ) {
++                    send_click_at(state, state->pending_device_id,
++                        state->pending_x, state->pending_y);
++                } else {
++                    fprintf(stderr, "long press dropped on lift: drift %u/%u "
++                        "exceeds fuzz %d\n", dx, dy, LONG_CLICK_FUZZ);
++                }
++            }
++            state->pending = 0;
+             unarm_delayed_rclick(state);
+         }
+     }
+ }
+ 
++static void send_click_at(struct input_state_t *state,
++        int dev_id, int pos_x, int pos_y) {
++    struct axis_range_t *r = &state->ranges[dev_id];
++    int sx = scale_axis(pos_x, r->x_min, r->x_max);
++    int sy = scale_axis(pos_y, r->y_min, r->y_max);
++    uinput_send_right_click(state->uinput, sx, sy);
++    // Logged so that "no menu appeared" can be told apart from
++    // "no click was ever sent" without a separate input recording.
++    fprintf(stderr, "right click sent at %d/%d of %d (raw %d,%d)\n",
++        sx, sy, UINPUT_ABS_MAX, pos_x, pos_y);
++}
++
++// Fire the click once the finger is off the glass, not while it is still
++// down. A click injected mid-touch is a second, simultaneous input sequence,
++// and GTK gestures configured for a single point (gtk4-ding's desktop grid
++// uses set_exclusive(true) with one point) simply ignore it -- the desktop
++// context menu never opened. Waiting for the lift also keeps the finger from
++// sitting on top of the menu that is about to appear.
++int CLICK_ON_RELEASE = 1;
++
+ void on_timer_expire(struct input_state_t *state) {
+     unsigned int dx = abs(state->pos_x - state->pressed_pos_x);
+     unsigned int dy = abs(state->pos_y - state->pressed_pos_y);
+     // Only consider movement within a range to be "still"
+     // i.e. if movement is within this value during timeout
+     //      , then it is a long click
+-    if (dx <= LONG_CLICK_FUZZ && dy <= LONG_CLICK_FUZZ)
+-        uinput_send_right_click(state->uinput);
++    if (state->pressed_device_id < 0) {
++        // Stray timer wakeup with no finger down -- nothing to do.
++    } else if (dx <= LONG_CLICK_FUZZ && dy <= LONG_CLICK_FUZZ) {
++        if (CLICK_ON_RELEASE) {
++            state->pending = 1;
++            state->pending_x = state->pos_x;
++            state->pending_y = state->pos_y;
++            state->pending_device_id = state->pressed_device_id;
++            fprintf(stderr, "long press recognized at %d,%d (drift %u/%u), "
++                "waiting for lift\n", state->pos_x, state->pos_y, dx, dy);
++        } else {
++            send_click_at(state, state->pressed_device_id,
++                state->pos_x, state->pos_y);
++        }
++    } else {
++        fprintf(stderr, "long press discarded: drift %u/%u exceeds fuzz %d\n",
++            dx, dy, LONG_CLICK_FUZZ);
++    }
+     // In Linux implementation of timerfd, the fd becomes always "readable"
+     // after the timeout. So we have to unarm it after we receive the event.
+     unarm_delayed_rclick(state);
+ }
+ 
+ void process_evdev_input(int num, struct libevdev **evdev) {
++    struct axis_range_t *ranges = calloc(num, sizeof(struct axis_range_t));
++    if (ranges == NULL) {
++        fprintf(stderr, "Out of memory\n");
++        exit(-1);
++    }
++    for (int i = 0; i < num; i++) {
++        read_axis_range(evdev[i], &ranges[i]);
++        printf("  %s: x %d..%d, y %d..%d\n", libevdev_get_name(evdev[i]),
++            ranges[i].x_min, ranges[i].x_max,
++            ranges[i].y_min, ranges[i].y_max);
++    }
++    fflush(stdout);
++
+     // Initialize everything to -1
+     struct input_state_t state = {
+         .pressed_device_id = -1,
+@@ -111,6 +219,10 @@ void process_evdev_input(int num, struct libevdev **evdev) {
+         .pressed_pos_x = -1, .pressed_pos_y = -1,
+         .fd_timer = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK),
+         .uinput = uinput_initialize(),
++        .ranges = ranges,
++        .pending = 0,
++        .pending_x = -1, .pending_y = -1,
++        .pending_device_id = -1,
+     };
+ 
+     // Check if uinput device was created
+@@ -135,22 +247,33 @@ void process_evdev_input(int num, struct libevdev **evdev) {
+             // Can we read an event?
+             if (!FD_ISSET(libevdev_get_fd(evdev[i]), &fds))
+                 continue;
+-            
++
+             // Read all the available events
+-            while (libevdev_next_event(evdev[i],
+-                    LIBEVDEV_READ_FLAG_NORMAL, &ev) == 0) {
++            int rc;
++            while ((rc = libevdev_next_event(evdev[i],
++                    LIBEVDEV_READ_FLAG_NORMAL, &ev)) == 0) {
+                 on_input_event(&state, &ev, i);
+             }
++            // A device that went away keeps its fd readable forever, which
++            // would spin this loop at 100% CPU. Bail out instead and let
++            // systemd restart us, so the device list is enumerated afresh.
++            if (rc == -ENODEV) {
++                fprintf(stderr, "Device %s disappeared, exiting to re-enumerate\n",
++                    libevdev_get_name(evdev[i]));
++                goto out;
++            }
+         }
+ 
+         // Reset the fd_set for next iteration
+         nfds = build_fd_set(&fds, state.fd_timer, num, evdev);
+     }
+ 
++out:
+     // Cleanup
+     close(state.fd_timer);
+     libevdev_uinput_destroy(state.uinput);
+     for (int i = 0; i < num; i++) {
+         free_evdev(evdev[i]);
+     }
+-}
+\ No newline at end of file
++    free(ranges);
++}
+diff --git a/rce.c b/rce.c
+index 6994c30..60ea562 100644
+--- a/rce.c
++++ b/rce.c
+@@ -136,6 +136,10 @@ int main() {
+         LONG_CLICK_FUZZ = atoi(env);
+     }
+ 
++    if ((env = getenv("CLICK_ON_RELEASE")) != NULL) {
++        CLICK_ON_RELEASE = atoi(env);
++    }
++
+     if ((env = getenv("TOUCH_DEVICE_BLACKLIST")) != NULL) {
+         TOUCH_DEVICE_BLACKLIST = malloc(strlen(env) + 3);
+         sprintf(TOUCH_DEVICE_BLACKLIST, "|%s|", env);
+diff --git a/rce.h b/rce.h
+index 2658763..89d401d 100644
+--- a/rce.h
++++ b/rce.h
+@@ -6,4 +6,5 @@
+ 
+ extern struct timespec LONG_CLICK_INTERVAL;
+ extern int LONG_CLICK_FUZZ;
++extern int CLICK_ON_RELEASE;
+ #endif
+\ No newline at end of file
+diff --git a/uinput.c b/uinput.c
+index ceed58d..1c5887d 100644
+--- a/uinput.c
++++ b/uinput.c
+@@ -6,7 +6,29 @@ struct libevdev_uinput *uinput_initialize() {
+     struct libevdev *evdev = libevdev_new();
+     libevdev_set_name(evdev, "Simulated Right Button");
+     libevdev_enable_event_type(evdev, EV_KEY);
++    // BTN_LEFT (== BTN_MOUSE) must be present: systemd's input_id builtin
++    // only tags a device carrying absolute axes as ID_INPUT_MOUSE
++    // ("absolute mouse") when BTN_MOUSE is set and BTN_STYLUS /
++    // BTN_TOOL_FINGER are not. Without that tag libinput would classify
++    // this device as a touchscreen and drop it.
++    libevdev_enable_event_code(evdev, EV_KEY, BTN_LEFT, NULL);
+     libevdev_enable_event_code(evdev, EV_KEY, BTN_RIGHT, NULL);
++    libevdev_enable_event_code(evdev, EV_KEY, BTN_MIDDLE, NULL);
++    // Absolute axes, so that the click can carry the position of the finger.
++    // Upstream sends a bare BTN_RIGHT; under Wayland touch does not move the
++    // pointer, so the menu would open wherever the pointer was left behind.
++    // Reporting an absolute position warps the pointer onto the finger first.
++    struct input_absinfo absinfo = {
++        .value = 0,
++        .minimum = 0,
++        .maximum = UINPUT_ABS_MAX,
++        .fuzz = 0,
++        .flat = 0,
++        .resolution = 0,
++    };
++    libevdev_enable_event_type(evdev, EV_ABS);
++    libevdev_enable_event_code(evdev, EV_ABS, ABS_X, &absinfo);
++    libevdev_enable_event_code(evdev, EV_ABS, ABS_Y, &absinfo);
+     // Initialize uinput device from the evdev descriptor
+     struct libevdev_uinput *uinput = NULL;
+     if (libevdev_uinput_create_from_device(evdev,
+@@ -18,9 +40,14 @@ struct libevdev_uinput *uinput_initialize() {
+     return uinput;
+ }
+ 
+-void uinput_send_right_click(struct libevdev_uinput *uinput) {
++void uinput_send_right_click(struct libevdev_uinput *uinput, int x, int y) {
++    // Move first, click second -- in one report each, so the compositor has
++    // the new pointer position before it routes the button press.
++    libevdev_uinput_write_event(uinput, EV_ABS, ABS_X, x);
++    libevdev_uinput_write_event(uinput, EV_ABS, ABS_Y, y);
++    libevdev_uinput_write_event(uinput, EV_SYN, SYN_REPORT, 0);
+     libevdev_uinput_write_event(uinput, EV_KEY, BTN_RIGHT, 1);
+     libevdev_uinput_write_event(uinput, EV_SYN, SYN_REPORT, 0);
+     libevdev_uinput_write_event(uinput, EV_KEY, BTN_RIGHT, 0);
+     libevdev_uinput_write_event(uinput, EV_SYN, SYN_REPORT, 0);
+-}
+\ No newline at end of file
++}
+diff --git a/uinput.h b/uinput.h
+index 40bc102..c50584e 100644
+--- a/uinput.h
++++ b/uinput.h
+@@ -2,6 +2,9 @@
+ #define UINPUT_H
+ #include <libevdev/libevdev-uinput.h>
+ 
++// Coordinate space the virtual absolute pointer reports in.
++#define UINPUT_ABS_MAX 32767
++
+ struct libevdev_uinput *uinput_initialize();
+-void uinput_send_right_click(struct libevdev_uinput *uinput);
+-#endif
+\ No newline at end of file
++void uinput_send_right_click(struct libevdev_uinput *uinput, int x, int y);
++#endif

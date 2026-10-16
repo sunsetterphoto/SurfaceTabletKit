@@ -1,0 +1,45 @@
+[Unit]
+Description=Touch long-press as right click (evdev-rce, SurfaceTabletKit)
+Documentation=https://github.com/sunsetterphoto/SurfaceTabletKit/tree/main/modules/touch-right-click
+# On Surface devices with IPTS the touchscreen is a virtual device created by iptsd. If it
+# does not exist yet, evdev-rce exits ("No touchscreen is found") and Restart=always retries.
+After=systemd-udev-settle.service
+# No rate limit: at boot the service may restart several times until the touchscreen exists.
+# The key belongs in [Unit]; in [Service] it is ignored.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/sysconfig/evdev-rce
+ExecStart=/usr/local/bin/evdev-rce
+Restart=always
+RestartSec=3
+
+# Needs root for /dev/input (read) and /dev/uinput (write).
+# PrivateDevices must NOT be set - it would hide /dev/input.
+DevicePolicy=closed
+DeviceAllow=/dev/uinput rw
+DeviceAllow=char-input rw
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateNetwork=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

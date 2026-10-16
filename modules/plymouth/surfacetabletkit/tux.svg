@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="400" height="480">
+  <!-- SurfaceTabletKit boot logo: white Tux silhouette with a bitten apple cut out of the belly -->
+  <defs>
+    <mask id="cutouts">
+      <rect x="0" y="0" width="400" height="480" fill="#fff"/>
+      <!-- eyes -->
+      <ellipse cx="174" cy="104" rx="17" ry="25" fill="#000"/>
+      <ellipse cx="226" cy="104" rx="17" ry="25" fill="#000"/>
+      <ellipse cx="180" cy="110" rx="6" ry="9" fill="#fff"/>
+      <ellipse cx="220" cy="110" rx="6" ry="9" fill="#fff"/>
+      <!-- beak outline -->
+      <path fill="none" stroke="#000" stroke-width="7" stroke-linejoin="round"
+            d="M160 146 C 176 130, 224 130, 240 146 C 232 166, 214 176, 200 176 C 186 176, 168 166, 160 146 Z"/>
+      <path fill="none" stroke="#000" stroke-width="5" stroke-linecap="round" d="M168 150 C 186 158, 214 158, 232 150"/>
+      <!-- flipper and feet seams -->
+      <path fill="none" stroke="#000" stroke-width="7" stroke-linecap="round" d="M96 236 C 72 290, 66 340, 74 372"/>
+      <path fill="none" stroke="#000" stroke-width="7" stroke-linecap="round" d="M304 236 C 328 290, 334 340, 326 372"/>
+      <path fill="none" stroke="#000" stroke-width="7" stroke-linecap="round" d="M110 416 C 140 404, 170 406, 190 420"/>
+      <path fill="none" stroke="#000" stroke-width="7" stroke-linecap="round" d="M290 416 C 260 404, 230 406, 210 420"/>
+      <!-- the apple, cut out of the belly -->
+      <g transform="translate(0,48)">
+        <path fill="#000" d="M200 222
+             C 184 210, 146 208, 140 252
+             C 134 294, 164 330, 184 328
+             C 192 327, 196 322, 200 322
+             C 204 322, 208 327, 216 328
+             C 236 330, 266 294, 260 252
+             C 254 208, 216 210, 200 222 Z"/>
+        <!-- bite: give the body back -->
+        <circle cx="266" cy="246" r="24" fill="#fff"/>
+        <path fill="#000" d="M201 206 C 200 186, 214 172, 236 170 C 236 192, 222 204, 201 206 Z"/>
+      </g>
+    </mask>
+  </defs>
+
+  <g fill="#fff" mask="url(#cutouts)">
+    <ellipse cx="200" cy="128" rx="78" ry="88"/>
+    <path d="M200 150 C 300 150, 338 260, 330 340 C 324 400, 280 440, 200 440 C 120 440, 76 400, 70 340 C 62 260, 100 150, 200 150 Z"/>
+    <!-- flippers -->
+    <path d="M86 230 C 50 280, 40 340, 52 380 C 70 372, 84 340, 92 300 Z"/>
+    <path d="M314 230 C 350 280, 360 340, 348 380 C 330 372, 316 340, 308 300 Z"/>
+    <!-- feet -->
+    <path d="M96 438 C 96 412, 132 404, 166 412 C 196 420, 196 448, 170 456 C 140 464, 96 462, 96 438 Z"/>
+    <path d="M304 438 C 304 412, 268 404, 234 412 C 204 420, 204 448, 230 456 C 260 464, 304 462, 304 438 Z"/>
+  </g>
+</svg>

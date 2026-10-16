@@ -1,0 +1,128 @@
+// SurfaceTabletKit Plymouth theme — "Mac boot parody"
+// White Tux silhouette with a bitten apple cut out of its belly, on black,
+// with a thin macOS-style progress bar underneath (boot only).
+//
+// All artwork is drawn at a native size (tux.png is 640 px tall) and scaled
+// uniformly by one factor, so the bar's round ends stay round on any screen.
+
+Window.SetBackgroundTopColor(0.0, 0.0, 0.0);
+Window.SetBackgroundBottomColor(0.0, 0.0, 0.0);
+
+screen_w = Window.GetWidth();
+screen_h = Window.GetHeight();
+
+// --- Logo: 30 % of the screen height ---
+logo_src = Image("tux.png");
+scale    = (screen_h * 0.30) / logo_src.GetHeight();
+logo_w   = Math.Int(logo_src.GetWidth()  * scale);
+logo_h   = Math.Int(logo_src.GetHeight() * scale);
+logo_x   = Math.Int((screen_w - logo_w) / 2);
+logo_y   = Math.Int((screen_h - logo_h) / 2 - 80 * scale);
+
+logo = Sprite(logo_src.Scale(logo_w, logo_h));
+logo.SetPosition(logo_x, logo_y, 1);
+logo.SetOpacity(0);
+
+// --- Progress bar ---
+track_src = Image("bar-track.png");
+bar_w = Math.Int(track_src.GetWidth()  * scale);
+bar_h = Math.Max(4, Math.Int(track_src.GetHeight() * scale));
+bar_x = Math.Int((screen_w - bar_w) / 2);
+bar_y = logo_y + logo_h + Math.Int(140 * scale);
+
+track = Sprite(track_src.Scale(bar_w, bar_h));
+track.SetPosition(bar_x, bar_y, 2);
+
+dot_img  = Image("bar-dot.png").Scale(bar_h, bar_h);
+fill_src = Image("bar-fill.png");
+
+fill_left  = Sprite(dot_img);
+fill_right = Sprite(dot_img);
+fill_mid   = Sprite();
+fill_left.SetPosition(bar_x, bar_y, 3);
+fill_right.SetPosition(bar_x, bar_y, 3);
+fill_mid.SetPosition(bar_x + bar_h / 2, bar_y, 3);
+
+// The bar only makes sense while booting; shutdown/reboot just shows Tux.
+show_bar = (Plymouth.GetMode() == "boot");
+
+fun set_bar_opacity (o) {
+    track.SetOpacity(o);
+    fill_left.SetOpacity(o);
+    fill_right.SetOpacity(o);
+    fill_mid.SetOpacity(o);
+}
+set_bar_opacity(0);
+
+// --- Animation state ---
+global.frame     = 0;
+global.target    = 0;   // progress reported by plymouthd (0..1)
+global.shown     = 0;   // smoothed progress actually drawn
+global.last_len  = -1;
+global.prompting = 0;
+
+fun boot_progress_callback (duration, progress) {
+    global.target = progress;
+}
+Plymouth.SetBootProgressFunction(boot_progress_callback);
+
+fun draw_fill () {
+    // length of the straight part between the two round ends
+    len = Math.Int((bar_w - bar_h) * global.shown);
+    if (len == global.last_len) return;
+    global.last_len = len;
+    fill_right.SetX(bar_x + len);
+    if (len > 0) {
+        fill_mid.SetImage(fill_src.Scale(len, bar_h));
+    }
+}
+
+fun refresh_callback () {
+    global.frame = global.frame + 1;
+    if (global.prompting) return;
+
+    // fade in over the first ~0.4 s (plymouth refreshes at 50 Hz)
+    fade = Math.Min(1, global.frame / 20);
+    logo.SetOpacity(fade);
+
+    if (show_bar) {
+        set_bar_opacity(fade);
+        // ease towards the reported progress so jumps look smooth
+        global.shown = global.shown + (global.target - global.shown) * 0.06;
+        draw_fill();
+    }
+}
+Plymouth.SetRefreshFunction(refresh_callback);
+
+// --- Password prompt (e.g. LUKS): replace logo and bar with a simple prompt ---
+fun display_password_callback (prompt, bullets) {
+    global.prompting = 1;
+    logo.SetOpacity(0);
+    set_bar_opacity(0);
+
+    global.prompt_img    = Image.Text(prompt, 1, 1, 1);
+    global.prompt_sprite = Sprite(global.prompt_img);
+    global.prompt_sprite.SetPosition((screen_w - global.prompt_img.GetWidth()) / 2, screen_h / 2 - 40, 10);
+
+    bullet_str = "";
+    for (i = 0; i < bullets; i++) bullet_str += "•";
+    global.bullet_img    = Image.Text(bullet_str, 1, 1, 1);
+    global.bullet_sprite = Sprite(global.bullet_img);
+    global.bullet_sprite.SetPosition((screen_w - global.bullet_img.GetWidth()) / 2, screen_h / 2 + 20, 10);
+}
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+
+fun display_normal_callback () {
+    global.prompting     = 0;
+    global.prompt_sprite = NULL;
+    global.bullet_sprite = NULL;
+    logo.SetOpacity(1);
+    if (show_bar) set_bar_opacity(1);
+}
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+fun quit_callback () {
+    logo.SetOpacity(0);
+    set_bar_opacity(0);
+}
+Plymouth.SetQuitFunction(quit_callback);

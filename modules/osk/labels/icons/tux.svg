@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(255,255,255,1)">
+  <!-- SurfaceTabletKit: Tux as the Super key symbol for gjsosk (own drawing, symbolic style) -->
+  <defs>
+    <mask id="m" maskUnits="userSpaceOnUse" x="-50" y="-50" width="500" height="600">
+      <rect x="-50" y="-50" width="500" height="600" fill="#fff"/>
+      <g>
+        <ellipse cx="200" cy="318" rx="88" ry="104" fill="#000"/>
+        <ellipse cx="170" cy="112" rx="21" ry="30" fill="#000"/>
+        <ellipse cx="230" cy="112" rx="21" ry="30" fill="#000"/>
+        <path fill="#000" d="M162 158 C 180 146, 220 146, 238 158 C 228 178, 212 186, 200 186 C 188 186, 172 178, 162 158 Z"/>
+      </g>
+    </mask>
+  </defs>
+  <g transform="translate(2,0.6) scale(0.0417)" mask="url(#m)">
+    <ellipse cx="200" cy="128" rx="80" ry="92"/>
+    <path d="M200 150 C 304 150, 342 262, 334 342 C 328 404, 282 444, 200 444 C 118 444, 72 404, 66 342 C 58 262, 96 150, 200 150 Z"/>
+    <path d="M84 226 C 44 280, 32 344, 46 388 C 68 378, 84 342, 92 300 Z"/>
+    <path d="M316 226 C 356 280, 368 344, 354 388 C 332 378, 316 342, 308 300 Z"/>
+    <path d="M92 440 C 92 410, 132 400, 168 410 C 200 420, 200 452, 172 460 C 140 468, 92 466, 92 440 Z"/>
+    <path d="M308 440 C 308 410, 268 400, 232 410 C 200 420, 200 452, 228 460 C 260 468, 308 466, 308 440 Z"/>
+  </g>
+</svg>

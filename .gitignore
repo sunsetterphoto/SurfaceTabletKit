@@ -1,0 +1,15 @@
+# build artefacts and local state - never commit
+*.o
+*.ko
+*.ko.xz
+*.mod
+*.mod.c
+.*.cmd
+Module.symvers
+modules.order
+__pycache__/
+# signing keys must never end up in the repository
+*.priv
+MOK.*
+*.pem
+*.key

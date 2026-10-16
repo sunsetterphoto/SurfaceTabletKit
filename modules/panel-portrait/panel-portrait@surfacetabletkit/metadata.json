@@ -1,0 +1,8 @@
+{
+  "uuid": "panel-portrait@surfacetabletkit",
+  "name": "SurfaceTabletKit Portrait Top Bar",
+  "description": "In portrait orientation, makes the top bar fit in steps: tighter spacing first, then hides tray icons and the keyboard-layout indicator, then the date. Landscape is left untouched.",
+  "shell-version": ["49"],
+  "url": "https://github.com/sunsetterphoto/SurfaceTabletKit",
+  "version": 1
+}

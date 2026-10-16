@@ -1,0 +1,69 @@
+/* SurfaceTabletKit overrides for the MacTahoe-Dark GNOME Shell theme
+ * Quick settings (system menu, top right) about 10 % smaller than MacTahoe's default.
+ * Fonts and icon sizes stay unchanged so it remains easy to hit by touch.
+ * Appended by apply-shell-overrides.sh; MacTahoe values in the comments. */
+
+.quick-settings {
+  padding: 16px !important;          /* 20px */
+  padding-top: 6px !important;       /* 8px */
+}
+
+.quick-settings-grid {
+  spacing-rows: 10px;                /* 12px */
+  spacing-columns: 10px;             /* 12px */
+}
+
+.quick-toggle, .quick-toggle-has-menu {
+  max-width: 152px;                  /* 172px */
+  min-height: 36px;                  /* 40px */
+}
+
+.quick-toggle {
+  padding: 10px !important;          /* 12px */
+}
+
+.quick-toggle-has-menu {
+  padding: 3px 0 !important;         /* 4px 0 */
+}
+
+.quick-toggle-has-menu .quick-toggle {
+  padding: 7px 0 !important;         /* 8px 0 */
+}
+
+.quick-toggle-has-menu .quick-toggle .quick-toggle-icon {
+  min-height: 36px !important;       /* 40px */
+  min-width: 36px !important;        /* 40px */
+}
+
+.quick-toggle-has-menu .quick-toggle-menu-button {
+  margin: 10px;                      /* 12px */
+}
+.quick-toggle-has-menu .quick-toggle-menu-button:ltr { margin-left: 0; }
+
+.quick-slider {
+  min-height: 36px;                  /* 40px */
+  padding: 10px !important;          /* 12px */
+}
+
+.quick-settings-system-item .icon-button {
+  padding: 10px;                     /* 12px */
+}
+
+/* ---- gjsosk on-screen keyboard (2026-10-15) ----
+ * Floating dark glass panel, same 28px radius as the dock. The panel background colour
+ * itself is set by gjsosk inline from its dconf keys (background-*-dark), the radius is not,
+ * so it comes from here. Keys: translucent white like macOS, selector is more specific than
+ * gjsosk's own `.regular` so it wins regardless of stylesheet order. */
+#osk-gjs {
+  border-radius: 28px;
+}
+
+.key.regular {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.key.regular:pressed,
+.key.regular.selected {
+  background-color: rgba(255, 255, 255, 0.30);
+}

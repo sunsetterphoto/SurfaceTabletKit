@@ -1,0 +1,22 @@
+diff --git a/meson.build b/meson.build
+index c06e832..1f744d6 100644
+--- a/meson.build
++++ b/meson.build
+@@ -28,7 +28,7 @@ pkg_config_bin = find_program('pkg-config', 'pkgconf')
+ libmutter_pc = ''
+ foreach line : run_command(pkg_config_bin, '--list-all', check: true).stdout().split('\n')
+   tokens = line.strip().split(' ')
+-  if tokens.length() > 0 and tokens[0].startswith('libmutter-')
++  if tokens.length() > 0 and tokens[0].startswith('libmutter-') and not tokens[0].startswith('libmutter-test-')
+     libmutter_pc = tokens[0]
+   endif
+ endforeach
+@@ -39,7 +39,7 @@ endif
+ mutter_api_version = libmutter_pc.split('libmutter-')[1]
+ message('Detected mutter API version: ' + mutter_api_version)
+ 
+-mutter_req = '>= 50.0'
++mutter_req = '>= 49.0'
+ 
+ clutter_pc = 'mutter-clutter-' + mutter_api_version
+ cogl_pc = 'mutter-cogl-' + mutter_api_version

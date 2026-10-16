@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily check for the linux-surface repository of the next Fedora release
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target
